@@ -35,7 +35,7 @@ class OLA:
         self.widget.data[0]['y'] = values_list
 
 
-class AvgOla(OLA):
+class AvgOla(OLA):  
     def __init__(self, widget: go.FigureWidget, mean_col: str):
         """
             Class for performing OLA by incrementally computing the estimated mean of *mean_col*.
@@ -78,14 +78,21 @@ class FilterAvgOla(OLA):
         self.mean_col = mean_col
 
         # Put any other bookkeeping class variables you need here...
+        self.sum = 0
+        self.count = 0
 
     def process_slice(self, df_slice: pd.DataFrame) -> None:
         """
             Update the running filtered mean with a dataframe slice.
         """
         # Implement me!
-        pass
-
+        #pass
+        n = len(df_slice[self.filter_col])
+        for i in range(n):
+            if(df_slice[self.filter_col][i] == self.filter_value):
+                self.sum += df_slice[self.mean_col][i]
+                self.count += 1
+        self.update_widget([""], [self.sum / self.count])
         # Update the plot. The filtered mean should be put into a singleton list due to Plotly semantics.
         # hint: self.update_widget([""], *estimated filtered mean of mean_col*)
 
