@@ -200,13 +200,30 @@ class GroupByCountOla(OLA):
         self.count_col = count_col
 
         # Put any other bookkeeping class variables you need here...
+        self.dcnt = {}
+        self.count=0
 
     def process_slice(self, df_slice: pd.DataFrame) -> None:
         """
             Update the running grouped counts with a dataframe slice.
         """
-        # Implement me!
-        pass
+        groups = df_slice[self.groupby_col].unique()
+        for group in groups:
+            rows = df_slice.loc[df_slice[self.groupby_col] == group , self.count_col]
+            #count
+            x = self.dcnt.get(group, 0)
+            self.dcnt[group] = x + rows.count()
+            self.count += rows.count()
+            
+        # Update the plot
+        l1=[]
+        l2=[]
+        sorted_dict = {key: self.dcnt[key] for key in sorted(self.dcnt)}
+
+        for key in sorted_dict.keys():
+            l1.append(key)
+            l2.append(self.dcnt[key] * (self.original_df_num_rows/self.count))
+        self.update_widget(l1,l2)
 
         # Update the plot
         # hint: self.update_widget(*list of groups*, *list of estimated group counts of count_col*)
@@ -238,7 +255,11 @@ class FilterDistinctOla(OLA):
             Update the running filtered cardinality with a dataframe slice.
         """
         # Implement me!
-        pass
+        rows = df_slice.loc[df_slice[self.filter_col] == self.filter_value , self.distinct_col]
+        for row in rows:
+            self.hll.add(str(row))
+        estimate = self.hll.cardinality()
+
 
         # Update the plot. The filtered cardinality should be put into a singleton list due to Plotly semantics.
-        # hint: self.update_widget([""], *estimated filtered cardinality of distinct_col*)
+        self.update_widget([""], [estimate])
