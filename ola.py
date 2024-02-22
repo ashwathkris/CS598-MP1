@@ -114,7 +114,7 @@ class GroupByAvgOla(OLA):
         self.dsum = {}
         self.dcnt = {}
 
-    def process_slice(self, df_slice: pd.DataFrame):
+    def process_slice(self, df_slice: pd.DataFrame) -> None:
         """
             Update the running grouped means with a dataframe slice.
         """
