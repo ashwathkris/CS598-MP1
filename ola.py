@@ -155,13 +155,30 @@ class GroupBySumOla(OLA):
         self.sum_col = sum_col
 
         # Put any other bookkeeping class variables you need here...
+        self.dsum = {}
+        self.count=0
 
     def process_slice(self, df_slice: pd.DataFrame) -> None:
         """
             Update the running grouped sums with a dataframe slice.
         """
-        # Implement me!
-        pass
+        groups = df_slice[self.groupby_col].unique()
+        for group in groups:
+            rows = df_slice.loc[df_slice[self.groupby_col] == group , self.sum_col]
+            #sum
+            x = self.dsum.get(group, 0)
+            self.dsum[group] = x + rows.sum()
+            self.count += rows.count()
+            
+        # Update the plot
+        l1=[]
+        l2=[]
+        sorted_dict = {key: self.dsum[key] for key in sorted(self.dsum)}
+
+        for key in sorted_dict.keys():
+            l1.append(key)
+            l2.append(self.dsum[key] * (self.original_df_num_rows/self.count))
+        self.update_widget(l1,l2)
 
         # Update the plot
         # hint: self.update_widget(*list of groups*, *list of estimated grouped sums of sum_col*)
