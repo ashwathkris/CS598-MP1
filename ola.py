@@ -87,11 +87,11 @@ class FilterAvgOla(OLA):
         """
         # Implement me!
         #pass
-        n = len(df_slice[self.filter_col])
-        for i in range(n):
-            if(df_slice[self.filter_col][i] == self.filter_value):
-                self.sum += df_slice[self.mean_col][i]
-                self.count += 1
+        
+        rows = df_slice.loc[df_slice[self.filter_col] == self.filter_value , self.mean_col]
+        self.sum += rows.sum()
+        self.count += rows.count()
+
         self.update_widget([""], [self.sum / self.count])
         # Update the plot. The filtered mean should be put into a singleton list due to Plotly semantics.
         # hint: self.update_widget([""], *estimated filtered mean of mean_col*)
@@ -111,16 +111,32 @@ class GroupByAvgOla(OLA):
         self.mean_col = mean_col
 
         # Put any other bookkeeping class variables you need here...
+        self.dsum = {}
+        self.dcnt = {}
 
-    def process_slice(self, df_slice: pd.DataFrame) -> None:
+    def process_slice(self, df_slice: pd.DataFrame):
         """
             Update the running grouped means with a dataframe slice.
         """
-        # Implement me!
-        pass
-
+        groups = df_slice[self.groupby_col].unique()
+        for group in groups:
+            rows = df_slice.loc[df_slice[self.groupby_col] == group , self.mean_col]
+            #sum
+            x = self.dsum.get(group, 0)
+            self.dsum[group] = x + rows.sum()
+            #count
+            y = self.dcnt.get(group, 0)
+            self.dcnt[group] = y + rows.count()
+            
         # Update the plot
-        # hint: self.update_widget(*list of groups*, *list of estimated group means of mean_col*)
+        l1=[]
+        l2=[]
+        sorted_dict = {key: self.dsum[key] for key in sorted(self.dsum)}
+
+        for key in sorted_dict.keys():
+            l1.append(key)
+            l2.append(self.dsum[key]/self.dcnt[key])
+        self.update_widget(l1,l2)
 
 
 class GroupBySumOla(OLA):
